@@ -1,8 +1,15 @@
 import Link from "next/link";
-import { getSubjectFromFS } from "@/lib/content-registry";
+import { getSubjectFromFS, getSubjectsFromFS } from "@/lib/content-registry";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Sparkles, BookOpen, Clock, Code2, Trophy } from "lucide-react";
 import TopicExplorer from "@/components/TopicExplorer";
+
+export async function generateStaticParams() {
+  const subjects = await getSubjectsFromFS();
+  return subjects.map((s) => ({
+    subject: s.id,
+  }));
+}
 
 export default async function SubjectPage({ params }: { params: Promise<{ subject: string }> }) {
   const { subject: subjectId } = await params;
