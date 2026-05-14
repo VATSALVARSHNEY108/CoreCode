@@ -2138,34 +2138,47 @@ export async function getSubjectsFromFS(): Promise<Subject[]> {
   const fs = await import("fs");
   const path = await import("path");
 
-  const contentRoot = path.join(process.cwd(), "content");
-  if (!fs.existsSync(contentRoot)) return [];
+  const contentRoot = path.resolve(process.cwd(), "content");
+  console.log(`[Content-Crawl] Root: ${contentRoot}`);
+  
+  if (!fs.existsSync(contentRoot)) {
+    console.error(`[Content-Crawl] ERROR: Content root NOT FOUND at ${contentRoot}`);
+    return [];
+  }
 
-  // Use defined metadata IDs to ensure consistency across environments
-  const subjectIds = Object.keys(SUBJECT_META);
+  const allFiles = fs.readdirSync(contentRoot);
+  console.log(`[Content-Crawl] Found in /content: ${allFiles.join(", ")}`);
 
-  const subjects: Subject[] = subjectIds
-    .filter((id) => fs.existsSync(path.join(contentRoot, id)))
-    .map((subjectId) => {
-      const subjectPath = path.join(contentRoot, subjectId);
-      const meta = SUBJECT_META[subjectId];
+  const subjectIds = ["dsa", "artificial-intelligence", "cse", "ece"];
+  const subjects: Subject[] = [];
 
-      const topicDirs = fs
-        .readdirSync(subjectPath, { withFileTypes: true })
-        .filter((d) => d.isDirectory())
-        .map((d) => d.name);
+  for (const subjectId of subjectIds) {
+    const subjectPath = path.join(contentRoot, subjectId);
+    
+    if (!fs.existsSync(subjectPath)) {
+      console.warn(`[Content-Crawl] Skipping ${subjectId}: Directory missing at ${subjectPath}`);
+      continue;
+    }
 
-      if (TOPIC_ORDER[subjectId]) {
-        const order = TOPIC_ORDER[subjectId];
-        topicDirs.sort((a, b) => {
-          const idxA = order.indexOf(a);
-          const idxB = order.indexOf(b);
-          if (idxA === -1 && idxB === -1) return 0;
-          if (idxA === -1) return 1;
-          if (idxB === -1) return -1;
-          return idxA - idxB;
-        });
-      }
+    const meta = SUBJECT_META[subjectId];
+    console.log(`[Content-Crawl] Processing Subject: ${subjectId}`);
+
+    const topicDirs = fs
+      .readdirSync(subjectPath, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
+
+    if (TOPIC_ORDER[subjectId]) {
+      const order = TOPIC_ORDER[subjectId];
+      topicDirs.sort((a, b) => {
+        const idxA = order.indexOf(a);
+        const idxB = order.indexOf(b);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+    }
 
       const topics: Topic[] = topicDirs.map((topicId) => {
       const topicPath = path.join(subjectPath, topicId);
@@ -2194,15 +2207,15 @@ export async function getSubjectsFromFS(): Promise<Subject[]> {
       };
     });
 
-    return {
+    subjects.push({
       id: subjectId,
       name: meta.label,
       description: meta.description,
       icon: meta.icon,
       color: meta.color,
       topics,
-    };
     });
+  }
 
   return subjects;
 }
