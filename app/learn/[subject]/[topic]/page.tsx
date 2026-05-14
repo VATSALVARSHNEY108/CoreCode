@@ -1,8 +1,24 @@
 import Link from "next/link";
-import { getSubjectFromFS, getTopicFromFS } from "@/lib/content-registry";
+import { getSubjectFromFS, getTopicFromFS, getSubjectsFromFS } from "@/lib/content-registry";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Sparkles, BookOpen, Clock, Code2, GraduationCap } from "lucide-react";
 import LessonList from "@/components/LessonList";
+
+export async function generateStaticParams() {
+  const subjects = await getSubjectsFromFS();
+  const params: { subject: string; topic: string }[] = [];
+  
+  for (const subject of subjects) {
+    for (const topic of subject.topics) {
+      params.push({
+        subject: subject.id,
+        topic: topic.id,
+      });
+    }
+  }
+  
+  return params;
+}
 
 export default async function TopicPage({ params }: { params: Promise<{ subject: string; topic: string }> }) {
   const { subject: subjectId, topic: topicId } = await params;
