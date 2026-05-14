@@ -1,119 +1,223 @@
+"use client";
 import Link from "next/link";
-import { getSubjectFromFS, getSubjectsFromFS } from "@/lib/content-registry";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Sparkles, BookOpen, Clock, Code2, Trophy } from "lucide-react";
-import TopicExplorer from "@/components/TopicExplorer";
+import { ArrowRight, ChevronRight, Code, Brain, Cpu, ArrowUpRight, Layers, Sparkles, Zap, BookOpen } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import Magnetic from "@/components/Magnetic";
+import { useScroll, useSpring as useSpringScroll } from "framer-motion";
+import { useTheme } from "next-themes";
 
-export async function generateStaticParams() {
-  const subjects = await getSubjectsFromFS();
-  return subjects.map((s) => ({
-    subject: s.id,
-  }));
-}
+/* ─── Animation Variants ─────────────────────────────────── */
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const } },
+};
 
-export default async function SubjectPage({ params }: { params: Promise<{ subject: string }> }) {
-  const { subject: subjectId } = await params;
-  const subject = await getSubjectFromFS(subjectId);
-  if (!subject) notFound();
+/* ─── Typewriter ─────────────────────────────────────────── */
+function Typewriter({ words, isLight }: { words: string[]; isLight: boolean }) {
+  const [index, setIndex] = useState(0);
+  const [chars, setChars] = useState(0);
+  const [deleting, setDeleting] = useState(false);
 
-
-
-  const lessonCount = subject.topics.reduce((a, t) => a + t.lessons.length, 0);
+  useEffect(() => {
+    const word = words[index];
+    const speed = deleting ? 40 : 80;
+    const timeout = setTimeout(() => {
+      if (!deleting) {
+        if (chars < word.length) setChars(c => c + 1);
+        else setTimeout(() => setDeleting(true), 2000);
+      } else {
+        if (chars > 0) setChars(c => c - 1);
+        else { setDeleting(false); setIndex(i => (i + 1) % words.length); }
+      }
+    }, speed);
+    return () => clearTimeout(timeout);
+  }, [chars, deleting, index, words]);
 
   return (
-    <div className="relative min-h-screen selection:bg-indigo-500 selection:text-white">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] -z-10" />
-      <div className="absolute top-1/4 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />
-
-      <div className="relative z-10 section-container pt-20 pb-16">
-        {/* Navigation */}
-        <Link href="/curriculum" className="inline-flex items-center gap-3 text-[11px] font-black text-[var(--text-muted)] hover:text-indigo-500 transition-all mb-20 uppercase tracking-[0.4em] group">
-          <div className="w-8 h-8 rounded-full border border-[var(--border-subtle)] flex items-center justify-center group-hover:border-indigo-500/50 group-hover:bg-indigo-500/5 transition-all">
-            <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
-          </div>
-          Curriculum Overview
-        </Link>
-
-        {/* Course Header */}
-        <header className="mb-20">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-16 mb-20">
-            <div className="flex-shrink-0 relative group">
-                <div className="w-28 h-28 rounded-[2rem] bg-[var(--bg-elevated)] border-2 border-[var(--border-subtle)] shadow-2xl flex items-center justify-center text-5xl transform -rotate-6 group-hover:rotate-0 group-hover:scale-105 transition-all duration-700 relative z-10 backdrop-blur-xl">
-                  {subject.icon}
-                </div>
-               {/* Reflection/Glow */}
-               <div className="absolute -inset-4 bg-indigo-500/10 rounded-[4rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            </div>
-            
-            <div className="flex-grow">
-              <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-indigo-500/5 border border-indigo-500/10 text-indigo-500 text-[10px] font-black tracking-[0.2em] uppercase mb-8 shadow-sm backdrop-blur-sm">
-                <Sparkles size={14} className="animate-pulse" />
-                Advanced Engineering Track
-              </div>
-              
-              <h1 className="display-heading text-4xl md:text-7xl mb-6 leading-[0.85] tracking-tighter">
-                {subject.name}<span className="text-indigo-500">.</span>
-              </h1>
-              
-              <p className="text-xl text-[var(--text-secondary)] leading-relaxed font-medium max-w-2xl">
-                {subject.description} Master each fundamental through our structured curriculum 
-                designed for <span className="text-[var(--text-primary)] font-bold">deep technical mastery</span>.
-              </p>
-            </div>
-          </div>
-          
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-1 p-1 rounded-[3.5rem] bg-[var(--bg-elevated)]/30 border border-[var(--border-subtle)] backdrop-blur-2xl shadow-2xl overflow-hidden">
-             <div className="flex flex-col gap-2 p-6 hover:bg-white/[0.02] transition-colors">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-1">
-                  <Code2 size={18} />
-                </div>
-                <span className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Complexity</span>
-                <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">Advanced</span>
-             </div>
-             
-             <div className="flex flex-col gap-2 p-6 hover:bg-white/[0.02] transition-colors border-l border-[var(--border-subtle)]">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 mb-1">
-                  <BookOpen size={18} />
-                </div>
-                <span className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Modules</span>
-                <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">{subject.topics.length} Units</span>
-             </div>
-             
-             <div className="flex flex-col gap-2 p-6 hover:bg-white/[0.02] transition-colors border-l border-[var(--border-subtle)]">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-1">
-                  <Sparkles size={18} />
-                </div>
-                <span className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Labs</span>
-                <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">{lessonCount} Sessions</span>
-             </div>
-          </div>
-        </header>
-
-        {/* Topics Section */}
-        <section className="relative">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20 border-b border-[var(--border-subtle)] pb-12">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Trophy size={20} className="text-amber-500" />
-                <h2 className="display-heading text-5xl">Learning Path</h2>
-              </div>
-              <p className="text-[var(--text-secondary)] font-medium text-lg max-w-xl">
-                A sequential journey through the core concepts. Complete each unit to unlock the next level.
-              </p>
-            </div>
-            <div className="flex-shrink-0">
-               <button className="px-8 py-4 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm uppercase tracking-widest shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95">
-                  Begin Journey
-               </button>
-            </div>
-          </div>
-
-          <TopicExplorer topics={subject.topics} subjectId={subjectId} />
-        </section>
-      </div>
-    </div>
+    <span className="inline-flex items-center">
+      <span className={`text-transparent bg-clip-text ${isLight ? 'bg-gradient-to-r from-indigo-600 to-cyan-600' : 'bg-gradient-to-r from-indigo-400 to-cyan-400'}`}>
+        {words[index].slice(0, chars)}
+      </span>
+      <motion.span 
+        animate={{ opacity: [1, 0] }} 
+        transition={{ duration: 0.8, repeat: Infinity }} 
+        className={`w-[2px] h-[1em] ml-1 ${isLight ? "bg-indigo-600" : "bg-indigo-400"}`}
+      />
+    </span>
   );
 }
 
+const features = [
+  { icon: <Zap size={18} />, label: "Real-time Simulations" },
+  { icon: <BookOpen size={18} />, label: "Guided Learning Paths" },
+  { icon: <Layers size={18} />, label: "Interactive Sandboxes" },
+  { icon: <Sparkles size={18} />, label: "AI-Powered Insights" },
+];
+
+const subjects = [
+  { id: "dsa", name: "Data Structures", description: "Master algorithms through visualized logic and real-time complexity analysis.", icon: <Code size={24} />, chapters: 13 },
+  { id: "artificial-intelligence", name: "Intelligence", description: "Explore neural networks and machine learning with interactive node visualizations.", icon: <Brain size={24} />, chapters: 16 },
+  { id: "ece", name: "Systems", description: "Deep dive into signals, circuits and hardware with dynamic circuit simulations.", icon: <Cpu size={24} />, chapters: 22 },
+];
+
+export default function HomePage() {
+  const { scrollYProgress } = useScroll();
+  const scale = useSpringScroll(useTransform(scrollYProgress, [0, 0.1], [1, 0.98]), { stiffness: 200, damping: 25 });
+  const opacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isLight = mounted && resolvedTheme === "light";
+
+  if (!mounted) return null;
+
+  return (
+    <div className="relative min-h-screen selection:bg-indigo-500/30 overflow-x-hidden home-container">
+      {/* ── HERO SECTION ───────────────────────────────────── */}
+      <motion.section
+        style={{ scale, opacity }}
+        className="relative min-h-screen flex flex-col items-center justify-center text-center z-10 px-6"
+      >
+        <div className="hero-glow" />
+        
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="max-w-6xl mx-auto"
+        >
+          {/* Badge */}
+          <motion.div variants={itemVariants} className="mb-12">
+            <span className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-[0.4em] text-[var(--text-secondary)] shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+              Next-Gen Learning Engine V2.0
+            </span>
+          </motion.div>
+
+          {/* Title */}
+          <motion.h1 variants={itemVariants} className="home-title mb-8">
+            CoreCode
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.div variants={itemVariants} className="flex flex-col items-center gap-6">
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[var(--text-primary)]" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Mastering <Typewriter words={["Algorithms", "Neural Nets", "Systems", "Complexity"]} isLight={isLight} />
+            </h2>
+            <p className="text-[var(--text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium opacity-80">
+              The ultimate high-fidelity laboratory for engineers. Master complex concepts through immersive interactivity.
+            </p>
+          </motion.div>
+
+          {/* CTAs */}
+          <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center gap-6 mt-14">
+            <Magnetic>
+              <Link href="/curriculum" className="btn-primary group !px-14 !py-7 !text-xl">
+                Start Learning
+                <ArrowRight size={22} className="ml-2 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Magnetic>
+            <Magnetic>
+              <Link href="/playground" className="btn-secondary !px-14 !py-7 !text-xl">
+                Playground
+              </Link>
+            </Magnetic>
+          </motion.div>
+
+          {/* Feature Pills */}
+          <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-4 mt-24">
+            {features.map((f, i) => (
+              <div 
+                key={i}
+                className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-black dark:text-white text-[10px] font-black uppercase tracking-widest transition-all hover:border-indigo-500/40 hover:-translate-y-1 shadow-premium"
+              >
+                <span className="text-indigo-600 dark:text-indigo-400">{f.icon}</span>
+                {f.label}
+              </div>
+            ))}
+          </motion.div>
+        </motion.div>
+      </motion.section>
+
+      {/* ── STATS SECTION ─────────────────────────────────── */}
+      <section className="relative z-10 py-32 px-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="stat-card"
+          >
+            <div className="text-7xl font-black mb-4 text-[var(--text-primary)]" style={{ fontFamily: "'Outfit', sans-serif" }}>120+</div>
+            <div className="section-label !mb-0">Interactive Modules</div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="stat-card"
+          >
+            <div className="text-7xl font-black mb-4 text-[var(--text-primary)]" style={{ fontFamily: "'Outfit', sans-serif" }}>60FPS</div>
+            <div className="section-label !mb-0">Smooth Visualizations</div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── DISCIPLINES SECTION ────────────────────────────── */}
+      <section className="relative z-10 py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col items-center text-center mb-24">
+            <span className="section-label">Laboratory Access</span>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tight text-[var(--text-primary)] mb-8" style={{ fontFamily: "'Outfit', sans-serif" }}>Core Disciplines</h2>
+            <div className="w-24 h-1.5 bg-indigo-500 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {subjects.map((subject, i) => (
+              <Link key={subject.id} href={`/learn/${subject.id}`} className="discipline-card group">
+                <div className="absolute top-10 right-10 text-xs font-black opacity-10 tabular-nums">0{i + 1}</div>
+                <div className="w-16 h-16 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)] group-hover:text-indigo-500 group-hover:scale-110 transition-all duration-500 mb-10">
+                  {subject.icon}
+                </div>
+                <h3 className="text-3xl font-black tracking-tight text-[var(--text-primary)] mb-4" style={{ fontFamily: "'Outfit', sans-serif" }}>{subject.name}</h3>
+                <p className="text-[var(--text-secondary)] font-medium leading-relaxed mb-12 opacity-80">{subject.description}</p>
+                <div className="mt-auto pt-8 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                  <span className="text-[11px] font-black text-indigo-500 uppercase tracking-widest">{subject.chapters} Chapters</span>
+                  <div className="w-10 h-10 rounded-full bg-indigo-500/5 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500">
+                    <ArrowUpRight size={20} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER CTA ────────────────────────────────────── */}
+      <section className="relative z-10 py-48 px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-4xl mx-auto"
+        >
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-10" style={{ fontFamily: "'Outfit', sans-serif" }}> Ready to start your journey? </h2>
+          <Magnetic>
+            <Link href="/curriculum" className="btn-primary inline-flex !px-16 !py-8 !text-2xl">
+              Get Started Now
+            </Link>
+          </Magnetic>
+        </motion.div>
+      </section>
+    </div>
+  );
+}
