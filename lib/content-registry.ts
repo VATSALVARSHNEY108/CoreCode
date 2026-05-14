@@ -4,17 +4,17 @@ import type { Subject, Topic, Lesson } from "./content-types";
 
 // Subject metadata (non-structural info that doesn't affect routing)
 const SUBJECT_META: Record<string, { description: string; icon: string; color: string; label: string }> = {
+  "artificial-intelligence": {
+    description: "Master Artificial Intelligence from foundations to advanced agentic systems",
+    icon: "🧠",
+    color: "from-indigo-500 to-purple-600",
+    label: "Artificial Intelligence (AI)",
+  },
   dsa: {
     description: "Master Data Structures & Algorithms from fundamentals to advanced techniques",
     icon: "⚡",
     color: "from-orange-500 to-red-600",
     label: "Data Structures & Algorithms",
-  },
-  "ai-ml": {
-    description: "Explore Artificial Intelligence and Machine Learning through interactive models",
-    icon: "🧠",
-    color: "from-indigo-500 to-purple-600",
-    label: "AI / Machine Learning",
   },
   cse: {
     description: "Core Computer Science fundamentals: OS, DBMS, and Computer Networks",
@@ -27,12 +27,6 @@ const SUBJECT_META: Record<string, { description: string; icon: string; color: s
     icon: "📡",
     color: "from-rose-500 to-pink-600",
     label: "Electronics (ECE)",
-  },
-  "artificial-intelligence": {
-    description: "Master Artificial Intelligence from foundations to advanced agentic systems",
-    icon: "🧠",
-    color: "from-indigo-500 to-purple-600",
-    label: "Artificial Intelligence (AI)",
   },
 };
 
@@ -2145,34 +2139,35 @@ export async function getSubjectsFromFS(): Promise<Subject[]> {
   const path = await import("path");
 
   const contentRoot = path.join(process.cwd(), "content");
-
   if (!fs.existsSync(contentRoot)) return [];
 
-  const subjectDirs = fs
-    .readdirSync(contentRoot, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name);
+  // Use defined metadata IDs to ensure consistency across environments
+  const subjectIds = Object.keys(SUBJECT_META);
 
-  return subjectDirs.map((subjectId) => {
-    const subjectPath = path.join(contentRoot, subjectId);
-    const meta = SUBJECT_META[subjectId] ?? {
-      description: `Learn ${subjectId.toUpperCase()} from scratch`,
-      icon: "📚",
-      color: "from-blue-500 to-indigo-600",
-      label: subjectId.toUpperCase(),
-    };
+  const subjects: Subject[] = subjectIds
+    .filter((id) => fs.existsSync(path.join(contentRoot, id)))
+    .map((subjectId) => {
+      const subjectPath = path.join(contentRoot, subjectId);
+      const meta = SUBJECT_META[subjectId];
 
-    const topicDirs = fs
-      .readdirSync(subjectPath, { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name);
+      const topicDirs = fs
+        .readdirSync(subjectPath, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name);
 
-    if (TOPIC_ORDER[subjectId]) {
-      const order = TOPIC_ORDER[subjectId];
-      topicDirs.sort((a, b) => order.indexOf(a) - order.indexOf(b));
-    }
+      if (TOPIC_ORDER[subjectId]) {
+        const order = TOPIC_ORDER[subjectId];
+        topicDirs.sort((a, b) => {
+          const idxA = order.indexOf(a);
+          const idxB = order.indexOf(b);
+          if (idxA === -1 && idxB === -1) return 0;
+          if (idxA === -1) return 1;
+          if (idxB === -1) return -1;
+          return idxA - idxB;
+        });
+      }
 
-    const topics: Topic[] = topicDirs.map((topicId) => {
+      const topics: Topic[] = topicDirs.map((topicId) => {
       const topicPath = path.join(subjectPath, topicId);
       const lessonFiles = fs
         .readdirSync(topicPath)
@@ -2207,7 +2202,9 @@ export async function getSubjectsFromFS(): Promise<Subject[]> {
       color: meta.color,
       topics,
     };
-  });
+    });
+
+  return subjects;
 }
 
 export async function getSubjectFromFS(subjectId: string): Promise<Subject | null> {
@@ -2216,14 +2213,9 @@ export async function getSubjectFromFS(subjectId: string): Promise<Subject | nul
   const contentRoot = path.join(process.cwd(), "content");
   const subjectPath = path.join(contentRoot, subjectId);
 
-  if (!fs.existsSync(subjectPath)) return null;
+  if (!fs.existsSync(subjectPath) || !SUBJECT_META[subjectId]) return null;
 
-  const meta = SUBJECT_META[subjectId] ?? {
-    description: `Learn ${subjectId.toUpperCase()} from scratch`,
-    icon: "📚",
-    color: "from-blue-500 to-indigo-600",
-    label: subjectId.toUpperCase(),
-  };
+  const meta = SUBJECT_META[subjectId];
 
   const topicDirs = fs
     .readdirSync(subjectPath, { withFileTypes: true })
