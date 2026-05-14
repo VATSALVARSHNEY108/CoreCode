@@ -1,6 +1,25 @@
-import { getSubjectFromFS, getTopicFromFS } from "@/lib/content-registry";
+import { getSubjectFromFS, getTopicFromFS, getSubjectsFromFS } from "@/lib/content-registry";
 import { notFound } from "next/navigation";
 import LessonLoader from "@/components/LessonLoader";
+
+export async function generateStaticParams() {
+  const subjects = await getSubjectsFromFS();
+  const params: { subject: string; topic: string; lesson: string }[] = [];
+  
+  for (const subject of subjects) {
+    for (const topic of subject.topics) {
+      for (const lesson of topic.lessons) {
+        params.push({
+          subject: subject.id,
+          topic: topic.id,
+          lesson: lesson.id,
+        });
+      }
+    }
+  }
+  
+  return params;
+}
 
 export default async function LessonPage({
   params,
