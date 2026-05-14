@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+/* THEME & VARIABLES (CACHE BUST 2) */
+@import "./styles/theme.css";
+@import "./styles/dark.css";
+@import "./styles/light.css";
+@import "./styles/base.css";
+
+/* COMPONENTS & LAYOUT */
+@import "./styles/cards.css";
+@import "./styles/buttons.css";
+@import "./styles/panels.css";
+@import "./styles/effects.css";
+@import "./styles/animations.css";
+
+/* SPECIFIC FIXES */
+@import "./styles/scrollbar.css";
+@import "./styles/lessons.css";
+@import "./Home.css";
+@import "../components/Navbar.css";

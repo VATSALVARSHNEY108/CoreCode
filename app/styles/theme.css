@@ -1,0 +1,11 @@
+@theme {
+  --color-bg-page: var(--bg-primary);
+  --color-bg-card: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent-primary: var(--accent-vibrant);
+  --color-accent-soft: var(--accent-soft);
+  --color-border-light: var(--border-color);
+
+  --shadow-premium: var(--shadow-main);
+}
