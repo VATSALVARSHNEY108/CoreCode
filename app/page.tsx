@@ -60,9 +60,10 @@ const features = [
 ];
 
 const subjects = [
-  { id: "dsa", name: "Data Structures", description: "Master algorithms through visualized logic and real-time complexity analysis.", icon: <Code size={24} />, chapters: 6 },
-  { id: "ai-ml", name: "Intelligence", description: "Explore neural networks and machine learning with interactive node visualizations.", icon: <Brain size={24} />, chapters: 3 },
-  { id: "ece", name: "Systems", description: "Deep dive into signals, circuits and hardware with dynamic circuit simulations.", icon: <Cpu size={24} />, chapters: 4 },
+  { id: "dsa", name: "Data Structures", description: "Master algorithms through visualized logic and real-time complexity analysis.", icon: <Code size={24} />, chapters: 13 },
+  { id: "artificial-intelligence", name: "Intelligence", description: "Explore neural networks and machine learning with interactive node visualizations.", icon: <Brain size={24} />, chapters: 16 },
+  { id: "cse", name: "Systems", description: "Core Computer Science fundamentals: OS, DBMS, and Computer Networks", icon: <Cpu size={24} />, chapters: 22 },
+  { id: "ece", name: "Electronics", description: "Electronics & Communication Engineering: Signals, Circuits, and Systems", icon: <Zap size={24} />, chapters: 18 },
 ];
 
 export default function HomePage() {
