@@ -2,6 +2,8 @@ import { getSubjectFromFS, getTopicFromFS, getSubjectsFromFS } from "@/lib/conte
 import { notFound } from "next/navigation";
 import LessonLoader from "@/components/LessonLoader";
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   const subjects = await getSubjectsFromFS();
   const params: { subject: string; topic: string; lesson: string }[] = [];
