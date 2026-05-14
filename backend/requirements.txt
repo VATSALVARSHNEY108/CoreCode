@@ -11,3 +11,4 @@ anthropic
 numpy
 pandas
 scikit-learn
+gunicorn
